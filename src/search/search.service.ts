@@ -87,10 +87,34 @@ export class SearchService {
     const {body} = await this.esService.search<any>({
       index: this.configService.get('ELASTICSEARCH_INDEX'),
       body: {
-        query: {
-          multi_match: {
-            query: restaurantName,
-            fields: ['StoreName']
+        query : {
+          bool: {
+            should: [
+              {
+                function_score: {
+                  query: {
+                    query_string : {
+                      query : '*' + restaurantName + '*',
+                      fields : ['StoreName']
+                    },
+                  },
+                  boost: 10
+                }
+              },
+              {
+                function_score: {
+                  query: {
+                    multi_match: {
+                      query: restaurantName,
+                      fields: ['StoreName'],
+                      fuzziness: 1,
+                      operator: 'and'
+                    }
+                  },
+                  boost: 1
+                }
+              }
+            ]
           }
         }
       }
